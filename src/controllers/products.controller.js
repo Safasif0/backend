@@ -55,9 +55,19 @@ export const getProductById = async (req, res) => {
 // ================= UPDATE PRODUCT =================
 export const updateProduct = async (req, res) => {
   try {
+    const updateData = {
+      title: req.body.title,
+      price: req.body.price,
+      description: req.body.description,
+    };
+
+    if (req.file) {
+      updateData.image = `http://localhost:4000/uploads/${req.file.filename}`;
+    }
+
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, seller: req.user.id },
-      req.body,
+      updateData,
       { new: true }
     );
 
@@ -70,6 +80,7 @@ export const updateProduct = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // ================= DELETE PRODUCT (SELLER) =================
 export const deleteProduct = async (req, res) => {

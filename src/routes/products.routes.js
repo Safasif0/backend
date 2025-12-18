@@ -28,7 +28,13 @@ router.post(
 router.get("/:id", getProductById);
 
 // UPDATE & DELETE (SELLER)
-router.put("/:id", auth("seller"), updateProduct);
+router.put(
+  "/:id",
+  auth("seller"),
+  upload.single("image"),
+  updateProduct
+);
+
 router.delete("/:id", auth("seller"), deleteProduct);
 
 // ADMIN

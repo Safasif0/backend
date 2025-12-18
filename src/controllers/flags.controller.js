@@ -2,7 +2,7 @@ import Flag from "../models/Flag.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 
-// buyer يعمل flag
+// ================= CREATE FLAG (buyer) =================
 export const createFlag = async (req, res) => {
   try {
     const { targetType, targetId, reason } = req.body;
@@ -17,13 +17,15 @@ export const createFlag = async (req, res) => {
 
     if (targetType === "product") {
       const product = await Product.findById(targetId);
-      if (!product) return res.status(404).json({ message: "Product not found" });
+      if (!product)
+        return res.status(404).json({ message: "Product not found" });
       sellerId = product.seller;
     }
 
     if (targetType === "order") {
       const order = await Order.findById(targetId);
-      if (!order) return res.status(404).json({ message: "Order not found" });
+      if (!order)
+        return res.status(404).json({ message: "Order not found" });
       sellerId = order.seller;
     }
 
@@ -42,10 +44,10 @@ export const createFlag = async (req, res) => {
   }
 };
 
-// seller يشوف كل الفلاجز
-export const getSellerFlags = async (req, res) => {
+// ================= GET SELLER FLAGS =================
+export const getFlags = async (req, res) => {
   try {
-    const flags = await Flag.find({})
+    const flags = await Flag.find({ seller: req.user.id })
       .populate("flaggedBy", "email")
       .populate("seller", "email")
       .populate("targetId");
@@ -56,58 +58,50 @@ export const getSellerFlags = async (req, res) => {
   }
 };
 
-// ✅ accept = تغيير status فقط (من غير validation)
-export const acceptFlag = async (req, res) => {
+// ================= GET FLAG BY ID =================
+export const getFlagById = async (req, res) => {
   try {
-    const flag = await Flag.findByIdAndUpdate(
-      req.params.id,
-      { status: "accepted" },
-      { new: true, runValidators: false }
-    );
+    const flag = await Flag.findById(req.params.id)
+      .populate("flaggedBy", "email")
+      .populate("seller", "email")
+      .populate("targetId");
 
-    if (!flag) {
-      return res.status(404).json({ message: "Flag not found" });
-    }
+    if (!flag) return res.status(404).json({ message: "Flag not found" });
 
-    res.json({ message: "Flag accepted", flag });
+    res.json(flag);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// ❌ reject = تغيير status فقط
-export const rejectFlag = async (req, res) => {
+// ================= UPDATE FLAG STATUS =================
+export const updateFlagStatus = async (req, res) => {
   try {
-    const flag = await Flag.findByIdAndUpdate(
-      req.params.id,
-      { status: "rejected" },
-      { new: true, runValidators: false }
+    const { status } = req.body; // accepted | rejected
+
+    const flag = await Flag.findOneAndUpdate(
+      { _id: req.params.id, seller: req.user.id },
+      { status },
+      { new: true }
     );
 
-    if (!flag) {
+    if (!flag)
       return res.status(404).json({ message: "Flag not found" });
-    }
 
-    res.json({ message: "Flag rejected", flag });
+    res.json(flag);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// 🗑️ حذف الهدف (بعد القبول فقط)
+// ================= DELETE TARGET (AFTER ACCEPT) =================
 export const deleteFlagTarget = async (req, res) => {
   try {
     const flag = await Flag.findById(req.params.id);
+    if (!flag) return res.status(404).json({ message: "Flag not found" });
 
-    if (!flag) {
-      return res.status(404).json({ message: "Flag not found" });
-    }
-
-    if (flag.status !== "accepted") {
-      return res.status(400).json({
-        message: "You must accept the flag first",
-      });
-    }
+    flag.status = "accepted";
+    await flag.save();
 
     if (flag.targetType === "product") {
       await Product.findByIdAndDelete(flag.targetId);
