@@ -1,27 +1,37 @@
 import express from "express";
 import {
-  addProduct,
-  getAllProducts,
   getProductById,
+  addProduct,
   updateProduct,
   deleteProduct,
-  getSellerProducts
+  deleteProductByAdmin,
+  getMyProducts,
 } from "../controllers/products.controller.js";
+
 import { auth } from "../Middleware/auth.js";
-import { deleteProductByAdmin } from "../controllers/products.controller.js";
+import upload from "../Middleware/upload.js";
 
 const router = express.Router();
 
-// buyer + seller
-router.get("/", getAllProducts);
+// ⭐ لازم /me قبل /:id
+router.get("/me", auth("seller"), getMyProducts);
+
+// ✅ ADD PRODUCT (التعديل هنا)
+router.post(
+  "/",
+  auth("seller"),
+  upload.single("image"),
+  addProduct
+);
+
+// GET PRODUCT BY ID
 router.get("/:id", getProductById);
 
-// seller only
-router.post("/", auth("seller"), addProduct);
+// UPDATE & DELETE (SELLER)
 router.put("/:id", auth("seller"), updateProduct);
 router.delete("/:id", auth("seller"), deleteProduct);
-router.get("/me/mine", auth("seller"), getSellerProducts);
-router.delete("/admin/:id", auth("admin"), deleteProduct);
+
+// ADMIN
 router.delete("/admin/:id", auth("admin"), deleteProductByAdmin);
 
 export default router;

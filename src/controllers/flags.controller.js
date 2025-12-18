@@ -1,119 +1,124 @@
 import Flag from "../models/Flag.js";
 import Product from "../models/Product.js";
+import Order from "../models/Order.js";
 
-// =====================
-//  BUYER → Create Flag
-// =====================
+// buyer يعمل flag
 export const createFlag = async (req, res) => {
   try {
-    const { productId, reason } = req.body;
+    const { targetType, targetId, reason } = req.body;
 
-    if (!productId || !reason) {
-      return res.status(400).json({ message: "productId and reason are required" });
+    if (!targetType || !targetId || !reason) {
+      return res.status(400).json({
+        message: "targetType, targetId and reason are required",
+      });
     }
 
-    const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    let sellerId;
 
-    // منع التكرار
-    const exists = await Flag.findOne({
-      product: productId,
-      reporter: req.user.id,
-    });
+    if (targetType === "product") {
+      const product = await Product.findById(targetId);
+      if (!product) return res.status(404).json({ message: "Product not found" });
+      sellerId = product.seller;
+    }
 
-    if (exists) {
-      return res.status(400).json({ message: "You already flagged this product" });
+    if (targetType === "order") {
+      const order = await Order.findById(targetId);
+      if (!order) return res.status(404).json({ message: "Order not found" });
+      sellerId = order.seller;
     }
 
     const flag = await Flag.create({
-      product: productId,
-      reporter: req.user.id,
+      targetType,
+      targetId,
+      targetModel: targetType === "product" ? "Product" : "Order",
       reason,
+      flaggedBy: req.user.id,
+      seller: sellerId,
     });
 
     res.status(201).json(flag);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
-// ====================================
-//  BUYER → Get my own flags
-// ====================================
-export const getMyFlags = async (req, res) => {
+// seller يشوف كل الفلاجز
+export const getSellerFlags = async (req, res) => {
   try {
-    const flags = await Flag.find({ reporter: req.user.id })
-      .populate("product", "title price");
+    const flags = await Flag.find({})
+      .populate("flaggedBy", "email")
+      .populate("seller", "email")
+      .populate("targetId");
 
     res.json(flags);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
-// ====================================
-//  ADMIN → Get ALL flags
-// ====================================
-export const getAllFlags = async (req, res) => {
+// ✅ accept = تغيير status فقط (من غير validation)
+export const acceptFlag = async (req, res) => {
   try {
-    const flags = await Flag.find()
-      .populate("product", "title price")
-      .populate("reporter", "name email role");
-
-    res.json(flags);
-  } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
-  }
-};
-
-// ====================================
-//  ADMIN → Delete a flag
-// ====================================
-export const deleteFlag = async (req, res) => {
-  try {
-    const flag = await Flag.findByIdAndDelete(req.params.id);
-    if (!flag) return res.status(404).json({ message: "Flag not found" });
-
-    res.json({ message: "Flag deleted" });
-  } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
-  }
-};
-
-// ====================================
-//  SELLER / ADMIN → Get flags for a product
-// ====================================
-export const getProductFlags = async (req, res) => {
-  try {
-    const flags = await Flag.find({ product: req.params.productId })
-      .populate("reporter", "name email");
-
-    res.json(flags);
-  } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
-  }
-};
-
-// =====================
-//  ADMIN → Update flag status (approve / reject)
-// =====================
-export const updateFlagStatus = async (req, res) => {
-  try {
-    const { status } = req.body;   // "approved" OR "rejected"
-
     const flag = await Flag.findByIdAndUpdate(
-      req.params.flagId,
-      { status },
-      { new: true }
+      req.params.id,
+      { status: "accepted" },
+      { new: true, runValidators: false }
     );
 
     if (!flag) {
       return res.status(404).json({ message: "Flag not found" });
     }
 
-    res.json({ message: "Flag updated", flag });
-
+    res.json({ message: "Flag accepted", flag });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err.message });
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ❌ reject = تغيير status فقط
+export const rejectFlag = async (req, res) => {
+  try {
+    const flag = await Flag.findByIdAndUpdate(
+      req.params.id,
+      { status: "rejected" },
+      { new: true, runValidators: false }
+    );
+
+    if (!flag) {
+      return res.status(404).json({ message: "Flag not found" });
+    }
+
+    res.json({ message: "Flag rejected", flag });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// 🗑️ حذف الهدف (بعد القبول فقط)
+export const deleteFlagTarget = async (req, res) => {
+  try {
+    const flag = await Flag.findById(req.params.id);
+
+    if (!flag) {
+      return res.status(404).json({ message: "Flag not found" });
+    }
+
+    if (flag.status !== "accepted") {
+      return res.status(400).json({
+        message: "You must accept the flag first",
+      });
+    }
+
+    if (flag.targetType === "product") {
+      await Product.findByIdAndDelete(flag.targetId);
+    }
+
+    if (flag.targetType === "order") {
+      await Order.findByIdAndDelete(flag.targetId);
+    }
+
+    res.json({ message: "Target deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

@@ -2,30 +2,30 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    buyer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
-    },
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
-      required: true
+      required: true,
+    },
+    buyer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    seller: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     quantity: {
       type: Number,
-      required: true,
-      min: 1
-    },
-    totalPrice: {
-      type: Number,
-      required: true
+      default: 1,
     },
     status: {
       type: String,
-      enum: ["pending", "shipped", "delivered", "cancelled"],
-      default: "pending"
-    }
+      enum: ["pending", "accepted", "shipped", "delivered", "cancelled"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

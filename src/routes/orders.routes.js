@@ -1,15 +1,18 @@
 import express from "express";
-import { createOrder, getMyOrders } from "../controllers/orders.controller.js";
 import { auth } from "../Middleware/auth.js";
+import {
+  createOrder,
+  getSellerOrders,
+  updateOrderStatus,
+} from "../controllers/orders.controller.js";
 
 const router = express.Router();
 
-// buyer only
+// buyer
 router.post("/", auth("buyer"), createOrder);
 
-// buyer only
-router.get("/me", auth("buyer"), getMyOrders);
-import { cancelOrder, getOrderById } from "../controllers/orders.controller.js";
-router.put("/:id/cancel", auth("buyer"), cancelOrder);
+// seller
+router.get("/seller", auth("seller"), getSellerOrders);
+router.put("/:id/status", auth("seller"), updateOrderStatus);
 
 export default router;

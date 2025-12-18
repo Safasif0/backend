@@ -1,33 +1,22 @@
 import express from "express";
+import { auth } from "../Middleware/auth.js";
 import {
   createFlag,
-  getMyFlags,
-  getAllFlags,
-  deleteFlag,
-  getProductFlags,
-  updateFlagStatus
+  getSellerFlags,
+  acceptFlag,
+  rejectFlag,
+  deleteFlagTarget,
 } from "../controllers/flags.controller.js";
-
-import { auth } from "../Middleware/auth.js";
 
 const router = express.Router();
 
-// BUYER → يعمل Flag
+// buyer
 router.post("/", auth("buyer"), createFlag);
 
-// BUYER → يشوف البلاغات اللي عملها
-router.get("/me", auth("buyer"), getMyFlags);
-
-// ADMIN → كل البلاغات
-router.get("/admin/all", auth("admin"), getAllFlags);
-
-// ADMIN → يحدث حالة البلاغ (approve / reject)
-router.put("/admin/:flagId", auth("admin"), updateFlagStatus);
-
-// ADMIN → يمسح بلاغ
-router.delete("/:id", auth("admin"), deleteFlag);
-
-// SELLER + ADMIN → يشوف البلاغات لمنتج معين
-router.get("/product/:productId", auth(["seller", "admin"]), getProductFlags);
+// seller
+router.get("/seller", auth("seller"), getSellerFlags);
+router.put("/:id/accept", auth("seller"), acceptFlag);
+router.put("/:id/reject", auth("seller"), rejectFlag);
+router.delete("/:id/target", auth("seller"), deleteFlagTarget);
 
 export default router;
