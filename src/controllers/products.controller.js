@@ -1,6 +1,19 @@
 import Product from "../models/Product.js";
 
-// ================= ADD PRODUCT =================
+// ================= GET ALL PRODUCTS (BUYER) =================
+export const getAllProducts = async (req, res) => {
+  try {
+    const products = await Product.find()
+      .populate("seller", "name")
+      .sort({ createdAt: -1 });
+
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ================= ADD PRODUCT (SELLER) =================
 export const addProduct = async (req, res) => {
   try {
     const { title, price, description } = req.body;
@@ -24,7 +37,7 @@ export const addProduct = async (req, res) => {
   }
 };
 
-// ================= GET MY PRODUCTS =================
+// ================= GET MY PRODUCTS (SELLER) =================
 export const getMyProducts = async (req, res) => {
   try {
     const products = await Product.find({ seller: req.user.id });
@@ -80,7 +93,6 @@ export const updateProduct = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 // ================= DELETE PRODUCT (SELLER) =================
 export const deleteProduct = async (req, res) => {

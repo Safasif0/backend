@@ -15,9 +15,8 @@ export const auth = (roles = []) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // نثبت شكل req.user
       req.user = {
-        id: decoded.id || decoded._id,
+        id: decoded.id || decoded._id, // ✅ المهم
         role: decoded.role,
       };
 

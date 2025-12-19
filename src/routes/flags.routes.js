@@ -1,18 +1,20 @@
 import express from "express";
-import { auth } from "../Middleware/auth.js";
 import {
-  getFlags,
-  getFlagById,
+  createFlag,
+  getAllFlags,
   updateFlagStatus,
-  deleteFlagTarget,
 } from "../controllers/flags.controller.js";
+import { auth } from "../Middleware/auth.js";
 
 const router = express.Router();
 
-// seller routes
-router.get("/", auth("seller"), getFlags);
-router.get("/:id", auth("seller"), getFlagById);
-router.put("/:id/status", auth("seller"), updateFlagStatus);
-router.delete("/:id/target", auth("seller"), deleteFlagTarget);
+// أي user عامل login
+router.post("/", auth(), createFlag);
+
+// Admin يشوف flags
+router.get("/", auth("admin"), getAllFlags);
+
+// Admin يغير status
+router.put("/:id", auth("admin"), updateFlagStatus);
 
 export default router;

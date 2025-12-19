@@ -2,45 +2,30 @@ import mongoose from "mongoose";
 
 const flagSchema = new mongoose.Schema(
   {
-    targetType: {
+    title: { type: String, required: true },
+    description: String,
+
+    type: {
       type: String,
-      enum: ["product", "order"],
-      required: true,
+      enum: ["general", "product", "order", "user"],
+      default: "general",
     },
 
-    targetModel: {
-      type: String,
-      enum: ["Product", "Order"],
-      required: true,
-    },
-
-    targetId: {
+    product: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      refPath: "targetModel",
-    },
-
-    reason: {
-      type: String,
-      required: true,
-    },
-
-    flaggedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
-    seller: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      ref: "Product",
     },
 
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected"],
+      enum: ["pending", "reviewed", "closed"],
       default: "pending",
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   { timestamps: true }
