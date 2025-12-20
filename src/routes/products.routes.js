@@ -9,22 +9,18 @@ import {
   updateProduct,
   deleteProductBySeller,
   deleteProductByAdmin,
-  getAllProducts, // ✅ مهم
 } from "../controllers/products.controller.js";
 
 const router = express.Router();
 
-/* ================= BUYER (PUBLIC) ================= */
-// لازم يبقى فوق
-router.get("/", getAllProducts);
-
-/* ================= SELLER ================= */
+// ADD product
+router.post("/", auth("seller"), upload.array("image", 5), addProduct);
 
 // MY products
 router.get("/me", auth("seller"), getMyProducts);
 
-// ADD product
-router.post("/", auth("seller"), upload.array("image", 5), addProduct);
+// GET product
+router.get("/:id", getProductById);
 
 // UPDATE product
 router.put("/:id", auth("seller"), upload.array("image", 5), updateProduct);
@@ -34,38 +30,7 @@ router.delete("/seller/:id", auth("seller"), deleteProductBySeller);
 
 // DELETE product by admin
 router.delete("/admin/:id", auth("admin"), deleteProductByAdmin);
-
-/* ================= COMMON ================= */
-
-// GET product by id (آخر حاجة)
-router.get("/:id", getProductById);
-/**
- * @swagger
- * /products:
- *   get:
- *     summary: Get all products (Public)
- *     tags: [Products]
- */
+// PUBLIC / BUYER - get all products
 router.get("/", getAllProducts);
-
-/**
- * @swagger
- * /products:
- *   post:
- *     summary: Add product (Seller)
- *     tags: [Products]
- *     security:
- *       - bearerAuth: []
- */
-router.post("/", auth("seller"), upload.array("image", 5), addProduct);
-
-/**
- * @swagger
- * /products/{id}:
- *   get:
- *     summary: Get product by ID
- *     tags: [Products]
- */
-router.get("/:id", getProductById);
 
 export default router;

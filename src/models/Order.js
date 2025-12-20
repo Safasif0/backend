@@ -39,13 +39,12 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    // ⭐ Rating + Comment
+    // ⭐ Review (Buyer only)
     rating: {
       type: Number,
       min: 1,
       max: 5,
     },
-
     comment: {
       type: String,
       trim: true,
