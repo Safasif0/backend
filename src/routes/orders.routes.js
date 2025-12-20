@@ -7,24 +7,26 @@ import {
   updateOrderStatus,
   addOrderReview,
   getProductReviews,
+  getSellerOrders,
 } from "../controllers/orders.controller.js";
 
 const router = express.Router();
 
-// BUYER
+// ================= BUYER =================
 router.post("/", auth("buyer"), createOrder);
 router.get("/my", auth("buyer"), getBuyerOrders);
 
-// ORDER DETAILS
-router.get("/:id", auth(), getOrderById);
-
-// SELLER
+// ================= SELLER =================
+router.get("/seller", auth("seller"), getSellerOrders);
 router.put("/:id/status", auth("seller"), updateOrderStatus);
 
-// BUYER REVIEW
+// ================= ORDER DETAILS =================
+router.get("/:id", auth(), getOrderById);
+
+// ================= BUYER REVIEW =================
 router.put("/:id/review", auth("buyer"), addOrderReview);
 
-// PUBLIC PRODUCT REVIEWS
+// ================= PUBLIC PRODUCT REVIEWS =================
 router.get("/product/:productId/reviews", getProductReviews);
 
 export default router;

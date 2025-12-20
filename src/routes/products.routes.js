@@ -9,18 +9,22 @@ import {
   updateProduct,
   deleteProductBySeller,
   deleteProductByAdmin,
+  getAllProducts, // ✅ لازم دي
 } from "../controllers/products.controller.js";
 
 const router = express.Router();
+
+/* ========= BUYER / PUBLIC ========= */
+// لازم تبقى فوق
+router.get("/", getAllProducts);
+
+/* ========= SELLER ========= */
 
 // ADD product
 router.post("/", auth("seller"), upload.array("image", 5), addProduct);
 
 // MY products
 router.get("/me", auth("seller"), getMyProducts);
-
-// GET product
-router.get("/:id", getProductById);
 
 // UPDATE product
 router.put("/:id", auth("seller"), upload.array("image", 5), updateProduct);
@@ -30,7 +34,10 @@ router.delete("/seller/:id", auth("seller"), deleteProductBySeller);
 
 // DELETE product by admin
 router.delete("/admin/:id", auth("admin"), deleteProductByAdmin);
-// PUBLIC / BUYER - get all products
-router.get("/", getAllProducts);
+
+/* ========= COMMON ========= */
+
+// GET product by id (آخر حاجة)
+router.get("/:id", getProductById);
 
 export default router;

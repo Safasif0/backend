@@ -40,7 +40,24 @@ export const getOrderById = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};// ================= SELLER ORDERS =================
+// ================= SELLER ORDERS =================
+export const getSellerOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({
+      "items.seller": req.user.id,
+    })
+      .populate("items.product", "title image price")
+      .populate("buyerUser", "name email phone")
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
 };
+
 
 // UPDATE STATUS (SELLER)
 export const updateOrderStatus = async (req, res) => {
