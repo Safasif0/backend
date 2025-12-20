@@ -1,59 +1,71 @@
 import express from "express";
-import {
-  getAllProducts,
-  getProductById,
-  addProduct,
-  updateProduct,
-  deleteProduct,
-  deleteProductByAdmin,
-  getMyProducts,
-} from "../controllers/products.controller.js";
-
 import { auth } from "../Middleware/auth.js";
 import upload from "../Middleware/upload.js";
 
+import {
+  addProduct,
+  getMyProducts,
+  getProductById,
+  updateProduct,
+  deleteProductBySeller,
+  deleteProductByAdmin,
+  getAllProducts, // ✅ مهم
+} from "../controllers/products.controller.js";
+
 const router = express.Router();
 
-// ✅ GET ALL PRODUCTS (BUYER)
+/* ================= BUYER (PUBLIC) ================= */
+// لازم يبقى فوق
 router.get("/", getAllProducts);
 
-// ⭐ SELLER PRODUCTS
+/* ================= SELLER ================= */
+
+// MY products
 router.get("/me", auth("seller"), getMyProducts);
 
-// ✅ ADD PRODUCT
-router.post(
-  "/",
-  auth("seller"),
-  upload.single("image"),
-  addProduct
-);
+// ADD product
+router.post("/", auth("seller"), upload.array("image", 5), addProduct);
 
-// ✅ GET PRODUCT BY ID
-router.get("/:id", getProductById);
+// UPDATE product
+router.put("/:id", auth("seller"), upload.array("image", 5), updateProduct);
 
-// UPDATE
-router.put(
-  "/:id",
-  auth("seller"),
-  upload.single("image"),
-  updateProduct
-);
-router.get("/", async (req, res) => {
-  try {
-    const products = await Product.find({ isActive: true })
-      .select("title description price image seller")
-      .populate("seller", "_id name");
+// DELETE product by seller
+router.delete("/seller/:id", auth("seller"), deleteProductBySeller);
 
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// DELETE
-router.delete("/:id", auth("seller"), deleteProduct);
-
-// ADMIN DELETE
+// DELETE product by admin
 router.delete("/admin/:id", auth("admin"), deleteProductByAdmin);
+
+/* ================= COMMON ================= */
+
+// GET product by id (آخر حاجة)
+router.get("/:id", getProductById);
+/**
+ * @swagger
+ * /products:
+ *   get:
+ *     summary: Get all products (Public)
+ *     tags: [Products]
+ */
+router.get("/", getAllProducts);
+
+/**
+ * @swagger
+ * /products:
+ *   post:
+ *     summary: Add product (Seller)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post("/", auth("seller"), upload.array("image", 5), addProduct);
+
+/**
+ * @swagger
+ * /products/{id}:
+ *   get:
+ *     summary: Get product by ID
+ *     tags: [Products]
+ */
+router.get("/:id", getProductById);
 
 export default router;

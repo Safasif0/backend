@@ -2,12 +2,20 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
+    // ✅ ربط الأوردر باليوزر
+    buyerUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     buyer: {
       name: String,
       phone: String,
       address: String,
       city: String,
     },
+
     items: [
       {
         product: {
@@ -23,7 +31,9 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
+
     totalPrice: Number,
+
     status: {
       type: String,
       default: "pending",

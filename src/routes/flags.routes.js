@@ -1,20 +1,33 @@
 import express from "express";
+import { auth } from "../Middleware/auth.js";
 import {
   createFlag,
   getAllFlags,
+  getSellerFlags,
   updateFlagStatus,
 } from "../controllers/flags.controller.js";
-import { auth } from "../Middleware/auth.js";
 
 const router = express.Router();
 
-// أي user عامل login
+// Buyer create flag
 router.post("/", auth(), createFlag);
 
-// Admin يشوف flags
+// Admin see all flags
 router.get("/", auth("admin"), getAllFlags);
 
-// Admin يغير status
-router.put("/:id", auth("admin"), updateFlagStatus);
+// Seller see flags on his products
+router.get("/seller", auth("seller"), getSellerFlags);
+
+// Seller أو Admin يغير status
+router.put("/:id", auth(["seller", "admin"]), updateFlagStatus);
+router.post("/", auth(), createFlag);
+
+// admin see all
+router.get("/", auth("admin"), getAllFlags);
+
+// ✅ seller see flags on his products
+router.get("/seller", auth("seller"), getSellerFlags);
+
+
 
 export default router;

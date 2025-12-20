@@ -6,7 +6,8 @@ import authRoutes from "./routes/auth.routes.js";
 import productRoutes from "./routes/products.routes.js";
 import orderRoutes from "./routes/orders.routes.js";
 import flagRoutes from "./routes/flags.routes.js";
-
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger.spec.js";
 const app = express();
 
 // Middlewares
@@ -21,5 +22,7 @@ app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 app.use("/orders", orderRoutes);
 app.use("/flags", flagRoutes);
+app.use("/uploads", express.static("uploads"));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;

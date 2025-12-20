@@ -1,23 +1,13 @@
 import Order from "../models/Order.js";
-import Product from "../models/Product.js";
 
-/* ================= BUYER creates order ================= */
+// ================= CREATE ORDER (BUYER) =================
 export const createOrder = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
-
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
     const order = await Order.create({
-      product: product._id,
-      buyer: req.user.id,
-      seller: product.seller,
-      quantity,
-      price: product.price,
-      total: product.price * quantity,
+      buyerUser: req.user.id, // مهم جدًا
+      buyer: req.body.buyer,
+      items: req.body.items,
+      totalPrice: req.body.totalPrice,
       status: "pending",
     });
 
@@ -27,12 +17,11 @@ export const createOrder = async (req, res) => {
   }
 };
 
-/* ================= SELLER gets his orders ================= */
-export const getSellerOrders = async (req, res) => {
+// ================= BUYER ORDERS =================
+export const getBuyerOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ seller: req.user.id })
-      .populate("product", "title image price")
-      .populate("buyer", "name email")
+    const orders = await Order.find({ buyerUser: req.user.id })
+      .populate("items.product", "title image price")
       .sort({ createdAt: -1 });
 
     res.json(orders);
@@ -41,15 +30,26 @@ export const getSellerOrders = async (req, res) => {
   }
 };
 
-/* ================= GET order details ================= */
+// ================= SELLER ORDERS =================
+export const getSellerOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ "items.seller": req.user.id })
+      .populate("items.product", "title image price")
+      .populate("buyerUser", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ================= ORDER DETAILS =================
 export const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findOne({
-      _id: req.params.id,
-      seller: req.user.id,
-    })
-      .populate("product", "title image price description")
-      .populate("buyer", "name email");
+    const order = await Order.findById(req.params.id)
+      .populate("items.product", "title image price")
+      .populate("buyerUser", "name email");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -61,23 +61,20 @@ export const getOrderById = async (req, res) => {
   }
 };
 
-/* ================= UPDATE order status ================= */
+// ================= UPDATE STATUS (SELLER) =================
 export const updateOrderStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const allowed = ["pending", "confirmed", "shipped", "delivered"];
 
-    const allowedStatus = ["pending", "confirmed", "shipped", "delivered"];
-    if (!allowedStatus.includes(status)) {
+    if (!allowed.includes(req.body.status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, seller: req.user.id },
-      { status },
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status: req.body.status },
       { new: true }
-    )
-      .populate("product", "title")
-      .populate("buyer", "name");
+    );
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
