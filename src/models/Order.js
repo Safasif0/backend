@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    // ✅ ربط الأوردر باليوزر
     buyerUser: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -36,7 +35,20 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
+      enum: ["pending", "confirmed", "shipped", "delivered"],
       default: "pending",
+    },
+
+    // ⭐ Rating + Comment
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+    },
+
+    comment: {
+      type: String,
+      trim: true,
     },
   },
   { timestamps: true }

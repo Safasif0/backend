@@ -6,20 +6,18 @@ import {
   getSellerOrders,
   getOrderById,
   updateOrderStatus,
+  addOrderReview,
 } from "../controllers/orders.controller.js";
 
 const router = express.Router();
 
-// BUYER
-router.post("/", auth("buyer"), createOrder);
-router.get("/my", auth("buyer"), getBuyerOrders);
+/**
+ * @swagger
+ * tags:
+ *   name: Orders
+ *   description: Orders management
+ */
 
-// SELLER
-router.get("/seller", auth("seller"), getSellerOrders);
-router.put("/:id/status", auth("seller"), updateOrderStatus);
-
-// BOTH
-router.get("/:id", auth(), getOrderById);
 /**
  * @swagger
  * /orders:
@@ -44,9 +42,6 @@ router.post("/", auth("buyer"), createOrder);
  *     tags: [Orders]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of orders
  */
 router.get("/my", auth("buyer"), getBuyerOrders);
 
@@ -67,10 +62,8 @@ router.get("/seller", auth("seller"), getSellerOrders);
  *   get:
  *     summary: Get order by ID
  *     tags: [Orders]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
+ *     security:
+ *       - bearerAuth: []
  */
 router.get("/:id", auth(), getOrderById);
 
@@ -78,12 +71,43 @@ router.get("/:id", auth(), getOrderById);
  * @swagger
  * /orders/{id}/status:
  *   put:
- *     summary: Update order status
+ *     summary: Update order status (Seller)
  *     tags: [Orders]
  *     security:
  *       - bearerAuth: []
  */
 router.put("/:id/status", auth("seller"), updateOrderStatus);
 
+/**
+ * @swagger
+ * /orders/{id}/review:
+ *   put:
+ *     summary: Add rating & comment (Buyer)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ */
+
+
+
+router.post("/", auth("buyer"), createOrder);
+router.get("/my", auth("buyer"), getBuyerOrders);
+
+router.get("/seller", auth("seller"), getSellerOrders);
+router.put("/:id/status", auth("seller"), updateOrderStatus);
+
+router.get("/:id", auth(), getOrderById);
+
+// ⭐ Review
+router.put("/:id/review", auth("buyer"), addOrderReview);
+
+router.post("/", auth("buyer"), createOrder);
+router.get("/my", auth("buyer"), getBuyerOrders);
+
+router.get("/product/:productId/reviews", getProductReviews);
+
+router.get("/:id", auth(), getOrderById);
+router.put("/:id/status", auth("seller"), updateOrderStatus);
+router.put("/:id/review", auth("buyer"), addOrderReview);
 
 export default router;

@@ -1,7 +1,7 @@
 import Flag from "../models/Flag.js";
 import Product from "../models/Product.js";
 
-// CREATE FLAG
+// ================= CREATE FLAG =================
 export const createFlag = async (req, res) => {
   try {
     const flag = await Flag.create({
@@ -18,7 +18,7 @@ export const createFlag = async (req, res) => {
   }
 };
 
-// ADMIN: get all flags
+// ================= ADMIN: GET ALL FLAGS =================
 export const getAllFlags = async (req, res) => {
   try {
     const flags = await Flag.find()
@@ -32,7 +32,7 @@ export const getAllFlags = async (req, res) => {
   }
 };
 
-// ✅ SELLER: flags على منتجاته
+// ================= SELLER: FLAGS ON MY PRODUCTS =================
 export const getSellerFlags = async (req, res) => {
   try {
     const myProducts = await Product.find({ seller: req.user.id }).select("_id");
@@ -49,11 +49,12 @@ export const getSellerFlags = async (req, res) => {
   }
 };
 
-// UPDATE STATUS (seller/admin)
+// ================= UPDATE FLAG STATUS =================
 export const updateFlagStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const allowed = ["pending", "reviewed", "rejected", "closed"];
+
     if (!allowed.includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
@@ -63,6 +64,10 @@ export const updateFlagStatus = async (req, res) => {
       { status },
       { new: true }
     ).populate("product", "title image");
+
+    if (!flag) {
+      return res.status(404).json({ message: "Flag not found" });
+    }
 
     res.json(flag);
   } catch (err) {
