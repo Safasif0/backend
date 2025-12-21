@@ -15,19 +15,10 @@ router.post("/", auth(), createFlag);
 // Admin see all flags
 router.get("/", auth("admin"), getAllFlags);
 
-// Seller see flags on his products
+// Seller see flags on his products + general
 router.get("/seller", auth("seller"), getSellerFlags);
 
 // Seller أو Admin يغير status
 router.put("/:id", auth(["seller", "admin"]), updateFlagStatus);
-router.post("/", auth(), createFlag);
-
-// admin see all
-router.get("/", auth("admin"), getAllFlags);
-
-// ✅ seller see flags on his products
-router.get("/seller", auth("seller"), getSellerFlags);
-
-
 
 export default router;

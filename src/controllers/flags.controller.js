@@ -7,7 +7,7 @@ export const createFlag = async (req, res) => {
     const flag = await Flag.create({
       title: req.body.title,
       description: req.body.description,
-      type: req.body.type,
+      type: req.body.type || "general",
       product: req.body.product || null,
       createdBy: req.user.id,
     });
@@ -32,13 +32,21 @@ export const getAllFlags = async (req, res) => {
   }
 };
 
-// ================= SELLER: FLAGS ON MY PRODUCTS =================
+// ================= SELLER: FLAGS ON MY PRODUCTS + GENERAL =================
 export const getSellerFlags = async (req, res) => {
   try {
-    const myProducts = await Product.find({ seller: req.user.id }).select("_id");
-    const ids = myProducts.map((p) => p._id);
+    const myProducts = await Product.find({
+      seller: req.user.id,
+    }).select("_id");
 
-    const flags = await Flag.find({ product: { $in: ids } })
+    const productIds = myProducts.map((p) => p._id);
+
+    const flags = await Flag.find({
+      $or: [
+        { product: { $in: productIds } }, // flags على منتجاته
+        { product: null },                // flags عامة
+      ],
+    })
       .populate("product", "title image")
       .populate("createdBy", "name email")
       .sort({ createdAt: -1 });

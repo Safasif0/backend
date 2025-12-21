@@ -14,11 +14,12 @@ const flagSchema = new mongoose.Schema(
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
+      default: null,
     },
 
     status: {
       type: String,
-      enum: ["pending", "reviewed", "closed"],
+      enum: ["pending", "reviewed", "rejected", "closed"],
       default: "pending",
     },
 
