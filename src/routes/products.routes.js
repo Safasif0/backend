@@ -39,5 +39,20 @@ router.delete("/admin/:id", auth("admin"), deleteProductByAdmin);
 
 // GET product by id (آخر حاجة)
 router.get("/:id", getProductById);
+router.get("/:id/reviews", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate("reviews.user", "name");
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.json(product.reviews || []);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 export default router;
