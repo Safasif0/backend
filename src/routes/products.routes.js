@@ -9,13 +9,16 @@ import {
   updateProduct,
   deleteProductBySeller,
   deleteProductByAdmin,
-  getAllProducts, // ✅ لازم دي
+  getAllProducts,
 } from "../controllers/products.controller.js";
+
+import Order from "../models/Order.js"; // ✅ مهم
 
 const router = express.Router();
 
 /* ========= BUYER / PUBLIC ========= */
-// لازم تبقى فوق
+
+// ✅ لازم تبقى أول حاجة
 router.get("/", getAllProducts);
 
 /* ========= SELLER ========= */
@@ -35,24 +38,40 @@ router.delete("/seller/:id", auth("seller"), deleteProductBySeller);
 // DELETE product by admin
 router.delete("/admin/:id", auth("admin"), deleteProductByAdmin);
 
-/* ========= COMMON ========= */
+/* ========= REVIEWS ========= */
 
-// GET product by id (آخر حاجة)
-router.get("/:id", getProductById);
+// ⭐ GET reviews for product (من orders مش products)
 router.get("/:id/reviews", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-      .populate("reviews.user", "name");
+    const productId = req.params.id;
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
+    const reviews = await Order.find({
+      "items.product": productId,
+      status: "delivered",
+      rating: { $exists: true },
+    })
+      .select("rating comment buyerUser createdAt")
+      .populate("buyerUser", "name");
 
-    res.json(product.reviews || []);
+    const numReviews = reviews.length;
+    const averageRating =
+      numReviews > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) / numReviews
+        : 0;
+
+    res.json({
+      reviews,
+      numReviews,
+      averageRating,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
+/* ========= COMMON ========= */
+
+// ❗ لازم تبقى آخر route
+router.get("/:id", getProductById);
 
 export default router;
