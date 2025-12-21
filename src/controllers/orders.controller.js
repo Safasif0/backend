@@ -28,7 +28,7 @@ export const getBuyerOrders = async (req, res) => {
   }
 };
 
-// ORDER DETAILS (BUYER/SELLER – view only)
+// ORDER DETAILS (BUYER / SELLER)
 export const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -40,8 +40,9 @@ export const getOrderById = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-};// ================= SELLER ORDERS =================
-// ================= SELLER ORDERS =================
+};
+
+// SELLER ORDERS
 export const getSellerOrders = async (req, res) => {
   try {
     const orders = await Order.find({
@@ -53,11 +54,9 @@ export const getSellerOrders = async (req, res) => {
 
     res.json(orders);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
-
 
 // UPDATE STATUS (SELLER)
 export const updateOrderStatus = async (req, res) => {
@@ -76,14 +75,10 @@ export const updateOrderStatus = async (req, res) => {
   res.json(order);
 };
 
-// ADD REVIEW (BUYER after delivered)
+// ADD REVIEW (BUYER)
 export const addOrderReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
-
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ message: "Rating must be 1 to 5" });
-    }
 
     const order = await Order.findOne({
       _id: req.params.id,
@@ -119,6 +114,42 @@ export const getProductReviews = async (req, res) => {
     })
       .select("rating comment buyerUser createdAt")
       .populate("buyerUser", "name");
+
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ================= SELLER REVIEWS =================
+export const getSellerReviews = async (req, res) => {
+  try {
+    const sellerId = req.user.id;
+
+    const orders = await Order.find({
+      status: "delivered",
+      rating: { $exists: true },
+      "items.seller": sellerId,
+    })
+      .select("rating comment buyerUser items createdAt")
+      .populate("buyerUser", "name")
+      .populate("items.product", "title");
+
+    const reviews = [];
+
+    orders.forEach((order) => {
+      order.items.forEach((item) => {
+        if (item.seller?.toString() === sellerId.toString()) {
+          reviews.push({
+            rating: order.rating,
+            comment: order.comment,
+            buyer: order.buyerUser,
+            product: item.product,
+            createdAt: order.createdAt,
+          });
+        }
+      });
+    });
 
     res.json(reviews);
   } catch (err) {
