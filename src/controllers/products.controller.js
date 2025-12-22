@@ -7,8 +7,8 @@ export const addProduct = async (req, res) => {
     const { title, price, description } = req.body;
 
     const images = req.files
-      ? req.files.map(
-          (file) => `http://localhost:4000/uploads/${file.filename}`
+      ? req.files.map((file) =>
+          `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
         )
       : [];
 
@@ -18,7 +18,7 @@ export const addProduct = async (req, res) => {
       description,
       deliveryTime: 3,
       seller: req.user.id,
-      image: images,
+      image: images, // Base64 strings
       isActive: true,
     });
 
