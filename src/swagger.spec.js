@@ -3,7 +3,7 @@ const PORT = process.env.PORT || 4000;
 const spec = {
   openapi: "3.0.0",
   info: {
-    title: "TECH HUB API",
+    title: "Market plaza API",
     version: "1.0.0",
     description: "Swagger documentation for all endpoints",
   },
@@ -106,7 +106,7 @@ const spec = {
         responses: { 200: { description: "OK" }, 401: { description: "Unauthorized" } },
       },
     },
-    "/auth/signup": {
+    "/auth/register": {
       post: {
         tags: ["Auth"],
         summary: "Signup",
